@@ -4,3 +4,5 @@
 
 Security rework of an old version of the eclass platform (2.3).  
 Attacking the opposing team using cross-site request forgery (CSRF).
+
+Team: Christos Kitsanelis(https://github.com/ckitsanelis), Maria-Isabella Manolaki-Sempagios(https://github.com/isabellems)
