@@ -1,0 +1,441 @@
+<p> </p>
+<script type="text/javascript" charset="utf-8">
+
+	$(document).ready(function() {
+		// Call the "sideBySide" function with number of rows, columns and start position
+		sideBySide(4, 7, 2);
+      
+	});
+
+    function sideBySide(rows, columns, startQuestion) {
+
+        /*********** Display multiple questions side by side ***********/
+
+            var rowNum = 0;
+            var colNum = 1;
+            var rowList = new Array();
+
+            //////// Add question classes for later use ////////
+
+            // Loop through all questions and add row and column specific classes
+            //
+
+            var firstQuestion = $('div[id^="question"]').get(startQuestion-1);
+              //Id of the first Question of the "table"
+              var tableId = $(firstQuestion).attr('id');
+              tableId = tableId.replace("question", "");
+
+              //Number of the last Question of the "table"
+              var lastQuestion = $('div[id^="question"]')[startQuestion + columns*rows-2];
+              lastQuestion = $(lastQuestion).attr('id');
+              lastQuestion = lastQuestion.replace("question", "");
+              //Wrap all Questions of the "table" in an element
+              $("#question" + tableId).nextUntil("#question" + lastQuestion).andSelf().add("#question" + lastQuestion).wrapAll("<div id='table" + tableId + "'/>");
+
+            $('div[id^="question"]').each(function(i) {
+                if(i >= (startQuestion-1) && rowNum < rows) { // This IF condition only needed if there are questions before or following the "inline" questions
+                $(this).addClass('qRow'+rowNum+'').addClass('qCol'+colNum+'').addClass('inlineQuestion').removeClass('normalQuestion');
+                    if(rowNum == 0 && colNum > 1) {
+                        $(this).addClass('columnLabel');
+                    }
+                    if(rowNum > 0 && colNum == 1) {
+                        $(this).addClass('rowLabel');
+                    }
+                    else if(rowNum > 0 && colNum > 1) {
+                        $(this).addClass('questionCell');
+                          //check if there are any populated inputs
+                          var textInput = $(this).find('input[type="text"]')[0];
+                          var radioInput = $(this).find('input[type="radio"][value = ""]')[0];
+                          var selectInput = $(this).find('select')[0];
+                          var rowTitle = $('div#table' + tableId + ' div.qCol1.qRow' + rowNum);
+                           //Check if question has a populated input
+                          if( rowNum > 1) {
+                         if(textInput && $(textInput).attr('value') != '' || radioInput && $(radioInput).attr('checked') != 'checked' || selectInput && $(selectInput).val() != '') {
+                            $(this).attr('name', 'visible');
+                            rowTitle.attr('name', 'visible');
+                         }
+                         else {
+                              $(this).attr('name', 'hidden').hide();
+                         }
+                        }
+                          else {
+                          $(this).attr('name', 'visible');
+                          rowTitle.attr('name', 'visible');
+                        }
+                    }
+                    if(colNum == columns) {
+                         if (rowNum > 1) {
+                          var rowTitle = $('div#table' + tableId + ' div.qCol1.qRow' + rowNum);
+                          if(rowTitle.attr('name') != 'visible') {
+                            $('div#table' + tableId + ' div.qRow' + rowNum + '[class*=qCol]').each(function(index) {
+                              $(this).attr('name', 'hidden').hide();
+                            });
+                          }
+                          else {
+                            $('div#table' + tableId + ' div.qRow' + rowNum + '[class*=qCol]').each(function(index) {
+                              $(this).attr('name', 'visible').show();
+                            });
+                          }
+                        }
+                        rowList.push($('div#table' + tableId + ' > div.qRow'+rowNum));
+                        rowNum++;
+                        colNum = 1;
+                    }
+                    else {
+                        colNum++;
+                    }
+                }
+              	else {
+                 if(!$(this).is('[class*=inlineQuestion]')){
+                    $(this).addClass('normalQuestion');
+                  }
+                }
+            });
+
+            //////// Survey layout manipulation ////////
+
+            // Fix the width of the survey
+            $('div.outerframe').css({
+                'width': '900px',
+                  'display': 'block',
+                  'overflow': 'auto',
+                  'margin-bottom': '20px'
+            });
+
+            // Wrap each "row" in a wrapper div
+            $(rowList).each(function(i) {
+                this.wrapAll('<div id="inlineWrapper'+i+'" class="inlineRow" />');
+            });
+
+
+            // Style the wrapper divs
+            $('div#table' + tableId + ' .inlineRow').css({
+                'width': '100%',
+                'margin': '0 auto 0 auto',
+                'clear': 'both'
+            });
+
+            $( 'div#table' + tableId + ' .inlineRow:first' ).css({
+                'margin-top': '10px'
+            });
+
+            // Get all the questions to sit politely side by side
+            $( 'div#table' + tableId + ' .inlineQuestion' ).css({
+                'float': 'left',
+                'height': '61px',
+                'overflow':'hidden',
+                'margin-bottom': '-8px',
+              	'clear': 'right'
+            });
+      
+      		$('div#table' + tableId + ' div.inlineQuestion.boilerplate').css({
+              'height': 'auto'
+            });
+
+
+            $( 'div#table' + tableId + ' .inlineQuestion .ls-questionhelp' ).hide();
+            $( 'div#table' + tableId + ' .inlineQuestion .ls-question-help' ).parent().hide();
+
+            // Any questions not displayed inline (this is only needed if there are questions following the "inline" questions)
+            $( '.normalQuestion' ).css({
+                'clear': 'both'
+            });
+
+            //////// Column manipulation ////////
+
+            // Set the column widths - can be set individually if necessary
+            // Must add up to less than 100%
+
+            var firstColWidth = 12;
+            var restColWidth = (100 - firstColWidth) / (columns-1);
+
+
+              $("div#table" + tableId + " [class*='qCol']").css({
+              'width': restColWidth + '%'
+            });
+
+
+            $( "div#table" + tableId + " .qCol1" ).css({
+                'width': firstColWidth + '%'
+            });
+
+            //////// Question manipulation ////////
+
+            // Hide the answer element in boilerplate questions
+            $( 'div#table' + tableId + ' div.boilerplate div.ls-answers' ).parent().hide();
+
+            // Hide the question text elements in non-boilerplate questions
+            $('div#table' + tableId + ' div.questionCell div.question-text').parent().hide();
+
+            // Push the question tables to 100%
+            $( 'div#table' + tableId + ' div.inlineRow table' ).css({
+                'width': '100%'
+            });
+
+            // Get everything to line up nicely vertically
+            $( 'div#table' + tableId + ' .inlineQuestion div.question-text, .inlineQuestion div.ls-answers p' ).css({
+                'text-align': 'center'
+            });
+
+            // Adjust cell heights so everything lines up nicely horizontally
+            $( 'div#table' + tableId + ' .inlineQuestion.boilerplate div.ls-answers, .inlineQuestion div.question-text' ).css({
+                'height':'100%',
+                'overflow':'hidden'
+            });
+
+
+            // Yes-no question styles
+
+          $( 'div#table' + tableId + ' div.yes-no ul' ).css({
+                'text-align': 'center',
+                'font-size': '90%',
+                'margin': '0',
+                'padding-bottom': '5px'
+            });
+            $( 'div#table' + tableId + ' div.yes-no li' ).css({
+                'padding-right': '1.5em'
+            });
+            $( 'div#table' + tableId + ' div.yes-no div.ls-answers' ).css({
+                'padding-bottom': '0'
+            });
+
+            // Short-text question styles
+            $( 'div#table' + tableId + ' div.text-short input' ).css({
+                'width': '98%',
+                'margin-left': '0'
+            });
+
+            // Numeric question styles
+            $( 'div#table' + tableId + ' div.numeric input' ).css({
+                'width': '98%',
+                'margin-left': '0'
+            });
+            $( 'div#table' + tableId + ' div.numeric p.tip' ).css({
+                'display': 'none'
+            });
+
+            // Get rid of the margins around select boxes
+            $( 'div#table' + tableId + ' p.question' ).css({ 'margin':'0' });
+
+           //
+              $('div#table' + tableId + ' *[id^="inlineWrapper"] div.question-container').css({
+              'min-height': '61px'
+            });
+      
+      		 $('div#table' + tableId + ' div.inlineQuestion div.answer-container').css({
+                'padding-top': '0',
+                'padding-bottom': '0'
+             });
+
+            $('div#table' + tableId + ' div.inlineQuestion div.answer-item input').css({
+                'margin': 'auto'
+             });
+
+            $('div#table' + tableId + ' div.inlineQuestion ul.btn-group').addClass("btn-group-xs");
+
+              $('div#table' + tableId + ' div.inlineQuestion .yesno-button, div.inlineQuestion .gender-button').css({
+              'width': '100%'
+            });
+
+              $('div#table' + tableId + ' *[id^="inlineWrapper"]').css({
+              'width': '100%'
+            });
+
+              $('div.outerframe').css({
+                'width': '1200px'
+            });
+
+              $('div#table' + tableId + ' div.inlineQuestion select.list-question-select').css({
+              'display': 'block',
+              'margin': 'auto',
+              'width': '98%'
+            });
+
+              $('div#table' + tableId + ' div.inlineQuestion div.ls-answers').css({
+              'padding': '',
+              'padding-top': '12px',
+              'padding-bottom': '12px'
+            });
+
+              $('div#table' + tableId + ' div.inlineQuestion ul.ls-answers.yesno-button').css({
+              'padding': '',
+              'padding-top': '7px',
+              'padding-bottom': '7px'
+            });
+
+              $('div#table' + tableId + ' div.inlineQuestion ul.ls-answers.yesno-button li.button-item').css({
+              'padding': ''
+            });
+
+              $('div#table' + tableId + ' div.inlineQuestion ul.ls-answers.yesno-button li.button-item label').css({
+              'margin': 'auto',
+              'padding': '3px 3px'
+            });
+
+              $('div#table' + tableId + ' *[id^="question"].inlineQuestion').css({
+              'margin-bottom': '-1px',
+              'margin-left': '0',
+              'margin-right': '0'
+            });
+
+              $('div#table' + tableId + ' div.inlineQuestion div.question-title-container div.question-text div.ls-label-question').css({
+              'overflow-wrap' : 'break-word',
+              'float': 'left',
+            });
+      
+
+            //Adjust table columns to properly fit a yes-no question if that exists
+            $("div#table" + tableId + " [id^='inlineWrapper']").each(function(index){
+              var found = false;
+              var num = 0;
+              $(this).find("*[id^='question']").each(function(index){
+                if ($(this).hasClass("yes-no")){
+                  found = true;
+                  num++;
+                }
+              });
+               $(this).find("*[id^='question']").each(function(index){
+                  var colNum = index+1;
+                if(!$(this).hasClass("qCol1")){
+                  if ($(this).hasClass("yes-no")){
+                    $(this).css({
+                      'width': '30%'
+                    });
+                    var col = colNum;
+                    $("div#table" + tableId + " div.qRow0.qCol" + colNum).css({
+                      'width': '30%'
+                    });
+                  }
+                  else{
+                    if(found == true){
+                      $(this).css({
+                        'width' : (100 - firstColWidth - num * 30) / (columns-1-num) + '%'
+                      });
+                      var col = colNum;
+                      $("div#table" + tableId + " div.qRow0.qCol" + colNum).css({
+                        'width' : (100 - firstColWidth - num * 30) / (columns-1-num) + '%'                   
+                      });
+                    }
+                  }
+                }
+              });
+            });
+
+             //Make all heights of the same line even
+            var i;
+            for (i = 0; i < rows; i++) {
+               var maxHeight = 0;
+               $('div#table' + tableId + ' .qRow' + i ).each(function(k){
+                   var height = $(this).height();
+                   if(height > maxHeight || k===0){
+                     maxHeight = height;
+                   }
+               });
+               $('div#table' + tableId + ' .qRow' + i ).height(maxHeight);
+            };
+
+
+              // The HTML content of the Add/Remove elements - modify as you wish
+            var addContent = '[+]';
+            var removeContent = '[-]';
+
+            // Create the Add and Remove elements & insert them
+            var el1 = document.createElement('div');
+            el1.setAttribute('id','addButton' + tableId);
+            document.body.appendChild(el1);
+            var el2 = document.createElement('div');
+            el2.setAttribute('id','removeButton' + tableId);
+            document.body.appendChild(el2);
+
+
+            $('div#table' + tableId + ' div#inlineWrapper' + (rows-1)).after( $('div#removeButton' + tableId) );
+            $('div#table' + tableId + ' div#inlineWrapper' + (rows-1)).after( $('div#addButton' + tableId) );
+
+              // Insert their HTML
+            $( 'div#addButton' + tableId).html( addContent );
+            $( 'div#removeButton' + tableId).html( removeContent );
+
+            // Style the elements - you can modify here if you wish
+            $( 'div#addButton' + tableId).css({
+                'margin':'10px 0 28px 10px',
+                'padding':'1px',
+                'text-align':'center',
+                'font-weight':'bold',
+                'width':'auto',
+                'cursor':'pointer',
+                'float':'left'
+            });
+
+            $( 'div#removeButton' + tableId).css({
+                'margin':'10px 0 28px 10px',
+                'padding':'1px',
+                'text-align':'center',
+                'font-weight':'bold',
+                'width':'auto',
+                'cursor':'pointer',
+                'float':'left'
+            });
+
+            $( 'div#removeButton' + tableId).hide();
+            var hiddenRows = $("div#table" + tableId + " [class*='qRow'][name='hidden']").length;
+            if (hiddenRows == 0) {
+                $('div#addButton' + tableId).hide();
+                var lastRow = rows-1;
+                $("div#table" + tableId + " div.inlineQuestion.qRow" + lastRow).css({
+                    'margin-bottom': '28px'
+                });
+            }
+
+            // Call the functions below when clicked
+            $('div#addButton' + tableId).click(function (event) {
+                addRow();
+            });
+
+            $('div#removeButton' + tableId).click(function (event) {
+                removeRow();
+            });
+
+              // Function to add a row, also shows the Remove element and hides the
+            //Add element if all rows are shown
+            function addRow() {
+                var classNames = $("div#table" + tableId + " [class*='qRow'][name='hidden']:first").attr('class');
+                var rowNum = $.grep(classNames.split(" "), function(v, i){
+                    return v.indexOf('qRow') === 0;
+                }).join();
+                $('div#table' + tableId + ' div.' + rowNum).attr('name', 'visible').show();
+                $('div#removeButton' + tableId).show();
+                  //Check if all availables rows are already shown
+                if ( $("div#table" + tableId + " [class*='qRow'][name='hidden']").length === 0 ) {
+                  $('div#addButton' + tableId).hide();
+                }
+            }
+
+            // Function to remove a row, also clears the contents of the removed row,
+            // shows the Add element if the last row is hidden and hides the Remove
+            // element if only the first row is shown
+            function removeRow() {
+                var classNames = $("div#table" + tableId + " [class*='qRow'][name='visible']:last").attr('class');
+                var rowNum = $.grep(classNames.split(" "), function(v, i){
+                    return v.indexOf('qRow') === 0;
+                }).join();
+                $('div#table' + tableId + ' div.' + rowNum).attr('name', 'hidden').hide();
+                  $('div#table' + tableId + ' div.' + rowNum + ' input[type="text"]').val('');
+                //Remove warning and error classes of the cleared inputs
+                  $('div#table' + tableId + ' div.' + rowNum + ' input[type="text"]').closest(".has-warning").removeClass("has-warning");
+                  $('div#table' + tableId + ' div.' + rowNum + ' input[type="text"]').each(function(index) {
+                  $(this).closest(".question-container").removeClass("input-error");
+                });
+                  $('div#table' + tableId + ' div.' + rowNum + ' select').val('');
+                $('div#table' + tableId + ' div.' + rowNum + ' input[type="radio"][value=""]').prop("checked", 'checked');
+                  $('div#table' + tableId + ' div.' + rowNum + ' input[type="radio"]').parent().removeClass("active");
+                $('div#table' + tableId + ' div.' + rowNum + ' input[type="radio"][value=""]').parent().addClass("active");
+                $('div#addButton' + tableId).show();
+                var questionRows = $("div#table" + tableId + " [class*='qRow'][name='visible']").length / columns;
+                if ( questionRows === 1 ) {
+                  $('div#removeButton' + tableId).hide();
+                }
+            }
+
+
+    }
+</script>
